@@ -9,7 +9,7 @@
   },
   "keywords": ["weather", "ics"],
   "author": "Tentacular Ideas",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "ics": "^2.27.0"
   },
