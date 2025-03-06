@@ -4,7 +4,8 @@
   "description": "Weather API to ICS",
   "main": "index.js",
   "scripts": {
-    "start": ". ./.env; node src/index.js"
+    "start": ". ./.env; node src/index.js",
+    "ci": "node src/index.js"
   },
   "keywords": ["weather", "ics"],
   "author": "Tentacular Ideas",
