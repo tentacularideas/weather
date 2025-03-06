@@ -1,7 +1,6 @@
 const ics = require('ics');
 const fs = require('fs');
 
-
 class DailyForecast {
   date;
   icon;
@@ -68,6 +67,8 @@ class Weatherbit {
     const apiKey = process.env.API_KEY;
     const latitude = process.env.LATITUDE;
     const longitude = process.env.LONGITUDE;
+
+    console.log(`Retrieving forecast on latitude ${latitude}, longitude ${longitude} with API key "${apiKey}".`);
   
     const url = new URL("/v2.0/forecast/daily", "https://api.weatherbit.io");
     url.searchParams.set("lat", latitude);
