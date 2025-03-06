@@ -30,9 +30,9 @@ jobs:
 
       - name: Run build script
         run: |
-          export API_KEY=${{secrets.API_KEY}}
-          export LATITUDE=${{env.LATITUDE}}
-          export LONGITUDE=${{env.LONGITUDE}}
+          export API_KEY=${{ secrets.API_KEY }}
+          export LATITUDE=${{ vars.LATITUDE }}
+          export LONGITUDE=${{ vars.LONGITUDE }}
           npm run ci
 
       - name: Configure Git
