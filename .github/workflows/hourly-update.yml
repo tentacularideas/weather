@@ -8,6 +8,7 @@ on:
 jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: write
       pages: write
@@ -15,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 2  # Fetch at least the last 2 commits to enable proper diff and commit operations
 
       - name: Setup Node.js
