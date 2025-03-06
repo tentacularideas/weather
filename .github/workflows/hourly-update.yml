@@ -1,0 +1,52 @@
+name: Hourly Update and Deploy
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Run every hour
+  workflow_dispatch:      # Allow manual triggers
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # Fetch at least the last 2 commits to enable proper diff and commit operations
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'  # Enable npm cache
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline  # Use cached packages when possible
+
+      - name: Run build script
+        run: npm run build
+
+      - name: Configure Git
+        run: |
+          git config user.name Julien Vaslet
+          git config user.email julien.vaslet@gmail.com
+
+      - name: Commit and push if changed
+        run: |
+          git add public
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update public folder" && git push)
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'public'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

@@ -1,0 +1,16 @@
+{
+  "name": "@tentacularideas/weather",
+  "version": "1.0.0",
+  "description": "Weather API to ICS",
+  "main": "index.js",
+  "scripts": {
+    "start": ". ./.env; node src/index.js"
+  },
+  "keywords": ["weather", "ics"],
+  "author": "Tentacular Ideas",
+  "license": "ISC",
+  "dependencies": {
+    "ics": "^2.27.0"
+  },
+  "devDependencies": {}
+}
