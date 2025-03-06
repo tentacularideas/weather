@@ -29,7 +29,9 @@ jobs:
         run: npm ci --prefer-offline  # Use cached packages when possible
 
       - name: Run build script
-        run: npm run ci
+        run: |
+          export API_KEY=${{secrets.API_KEY}}
+          npm run ci
 
       - name: Configure Git
         run: |
