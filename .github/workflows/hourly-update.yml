@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: write
       pages: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +44,7 @@ jobs:
       - name: Commit and push if changed
         run: |
           git add public
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update public folder" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "ci: updated forecasts" && git push)
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
