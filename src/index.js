@@ -1,4 +1,4 @@
-const ics = require('ics');
+const ICAL = require('ical.js');
 const fs = require('fs');
 
 class DailyForecast {
@@ -99,65 +99,77 @@ function updateIcs(forecast) {
   const latitude = parseFloat(process.env.LATITUDE);
   const longitude = parseFloat(process.env.LONGITUDE);
 
-  // Create events from forecast
-  const events = forecast.map(day => {
-    const endDate = new Date(day.date);
-    endDate.setDate(endDate.getDate() + 1);
-    
-    return {
-      start: [day.date.getFullYear(), day.date.getMonth() + 1, day.date.getDate()],
-      end: [endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate()],
-      title: `${day.icon} ${day.temperatureMin.toFixed(1)}°C/${day.temperatureMax.toFixed(1)}°C`,
-      description: `${day.description}, Min: ${day.temperatureMin.toFixed(1)}°C, Max: ${day.temperatureMax.toFixed(1)}°C`,
-      uid: `Weather#${Math.floor(day.date.getTime() / 1000)}`,
-      productId: productId,
-      geo: {
-        lat: latitude,
-        lon: longitude,
-      },
-    };
-  });
-
-  let existingEvents = [];
+  // Create or load calendar
+  let jcalData;
   try {
     if (fs.existsSync(path)) {
       const fileContent = fs.readFileSync(path, 'utf8');
-      existingEvents = ics.parseICS(fileContent).events
-        .filter(event => {
-          const eventDate = new Date(event.start);
-          const twoWeeksAgo = new Date();
-          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-          return eventDate >= twoWeeksAgo;
-        });
+      jcalData = ICAL.parse(fileContent);
     }
   } catch (error) {
     console.error('Error reading existing ICS file:', error);
   }
 
-  // Create a Map of existing events by uid
-  const existingEventsMap = new Map(
-    existingEvents.map(event => [event.uid, event])
-  );
-
-  // For each new event, either add it or replace the existing one
-  events.forEach(event => {
-    existingEventsMap.set(event.uid, event);
-  });
-
-  // Convert Map back to array
-  const allEvents = Array.from(existingEventsMap.values());
-
-  // Generate ICS file
-  const { error, value } = ics.createEvents(allEvents);
-  if (error) {
-    console.error('Error creating ICS file:', error);
-    return;
+  // Create new calendar if none exists
+  if (!jcalData) {
+    jcalData = [
+      "vcalendar",
+      [
+        ["prodid", {}, "text", `-//${productId}//Weather Calendar//EN`],
+        ["version", {}, "text", "2.0"],
+        ["calscale", {}, "text", "GREGORIAN"]
+      ],
+      []
+    ];
   }
 
-  // Save to file
-  fs.writeFileSync(path, value);
-}
+  const vcalendar = new ICAL.Component(jcalData);
+  
+  // Remove old events (older than 2 weeks)
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  
+  const existingEvents = vcalendar.getAllSubcomponents('vevent');
+  existingEvents.forEach(event => {
+    const eventDate = new Date(event.getFirstPropertyValue('dtstart'));
+    if (eventDate < twoWeeksAgo) {
+      vcalendar.removeSubcomponent(event);
+    }
+  });
 
+  // Add or update forecast events
+  forecast.forEach(day => {
+    const uid = `Weather#${Math.floor(day.date.getTime() / 1000)}`;
+    const existingEvent = vcalendar.getFirstSubcomponent('vevent', event => 
+      event.getFirstPropertyValue('uid') === uid
+    );
+
+    if (existingEvent) {
+      vcalendar.removeSubcomponent(existingEvent);
+    }
+
+    const vevent = new ICAL.Component('vevent');
+    const endDate = new Date(day.date);
+    endDate.setDate(endDate.getDate() + 1);
+
+    vevent.addPropertyWithValue('uid', uid);
+    vevent.addPropertyWithValue('dtstamp', ICAL.Time.now());
+    vevent.addPropertyWithValue('dtstart', ICAL.Time.fromJSDate(day.date, true));
+    vevent.addPropertyWithValue('dtend', ICAL.Time.fromJSDate(endDate, true));
+    vevent.addPropertyWithValue('summary', 
+      `${day.icon} ${day.temperatureMin.toFixed(1)}°C/${day.temperatureMax.toFixed(1)}°C`
+    );
+    vevent.addPropertyWithValue('description',
+      `${day.description}, Min: ${day.temperatureMin.toFixed(1)}°C, Max: ${day.temperatureMax.toFixed(1)}°C`
+    );
+    vevent.addPropertyWithValue('geo', `${latitude};${longitude}`);
+
+    vcalendar.addSubcomponent(vevent);
+  });
+
+  // Save to file
+  fs.writeFileSync(path, vcalendar.toString());
+}
 
 async function main() {
   updateIcs(await Weatherbit.getForecast());
