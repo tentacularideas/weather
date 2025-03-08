@@ -86,8 +86,8 @@ class Weatherbit {
         new Date(day.datetime),
         weather.icon,
         weather.description,
-        day.min_temp,
-        day.max_temp,
+        Math.round(day.min_temp),
+        Math.round(day.max_temp)
       );
     });
   }
@@ -164,10 +164,10 @@ function updateIcs(forecast) {
     vevent.addPropertyWithValue('dtstart', startTime);
     vevent.addPropertyWithValue('dtend', endTime);
     vevent.addPropertyWithValue('summary', 
-      `${day.icon} ${day.temperatureMin.toFixed(1)}°C/${day.temperatureMax.toFixed(1)}°C`
+      `${day.icon} ${day.temperatureMin}°C/${day.temperatureMax}°C`
     );
     vevent.addPropertyWithValue('description',
-      `${day.description}, Min: ${day.temperatureMin.toFixed(1)}°C, Max: ${day.temperatureMax.toFixed(1)}°C`
+      `${day.description}, Min: ${day.temperatureMin}°C, Max: ${day.temperatureMax}°C`
     );
     vevent.addPropertyWithValue('geo', `${latitude};${longitude}`);
 
