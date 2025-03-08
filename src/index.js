@@ -152,10 +152,17 @@ function updateIcs(forecast) {
     const endDate = new Date(day.date);
     endDate.setDate(endDate.getDate() + 1);
 
+    const startTime = ICAL.Time.fromJSDate(day.date, true);
+    const endTime = ICAL.Time.fromJSDate(endDate, true);
+    
+    // Force date-only format
+    startTime.isDate = true;
+    endTime.isDate = true;
+
     vevent.addPropertyWithValue('uid', uid);
     vevent.addPropertyWithValue('dtstamp', ICAL.Time.now());
-    vevent.addPropertyWithValue('dtstart', ICAL.Time.fromJSDate(day.date, true));
-    vevent.addPropertyWithValue('dtend', ICAL.Time.fromJSDate(endDate, true));
+    vevent.addPropertyWithValue('dtstart', startTime);
+    vevent.addPropertyWithValue('dtend', endTime);
     vevent.addPropertyWithValue('summary', 
       `${day.icon} ${day.temperatureMin.toFixed(1)}°C/${day.temperatureMax.toFixed(1)}°C`
     );
